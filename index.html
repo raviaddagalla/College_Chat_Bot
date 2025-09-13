@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>College Chatbot Demo</title>
+  <style>
+    body { font-family: system-ui, Arial; max-width: 900px; margin: 2rem auto; padding: 1rem; }
+    textarea, input { width:100%; padding:8px; margin:6px 0; }
+    button { padding:8px 12px; }
+    .box { border:1px solid #ddd; padding:12px; border-radius:8px; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+  <h2>College Chatbot — Demo</h2>
+  <div class="box">
+    <h3>1) Scrape a page</h3>
+    <input id="url" placeholder="Enter a college page URL (e.g. https://example.edu/notice)" />
+    <button onclick="scrape()">Scrape & Chunk</button>
+    <pre id="scrapeStatus"></pre>
+  </div>
+
+  <div class="box">
+    <h3>2) Ask a question</h3>
+    <textarea id="question" rows="3" placeholder="Ask about fees, dates, contacts..."></textarea>
+    <button onclick="ask()">Ask Gemini (via backend)</button>
+    <pre id="answer"></pre>
+  </div>
+
+<script>
+async function scrape(){
+  const url = document.getElementById("url").value.trim();
+  if(!url){ alert("Enter URL"); return; }
+  document.getElementById("scrapeStatus").textContent = "Scraping...";
+  try{
+    const resp = await fetch("http://127.0.0.1:8000/scrape", {
+      method: "POST",
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({url})
+    });
+    const j = await resp.json();
+    document.getElementById("scrapeStatus").textContent = JSON.stringify(j, null, 2);
+  }catch(e){
+    document.getElementById("scrapeStatus").textContent = "Error: " + e;
+  }
+}
+
+async function ask(){
+  const q = document.getElementById("question").value.trim();
+  if(!q){ alert("Write a question"); return; }
+  document.getElementById("answer").textContent = "Thinking...";
+  try{
+    const resp = await fetch("http://127.0.0.1:8000/ask", {
+      method: "POST",
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({question: q, top_k: 3})
+    });
+    const j = await resp.json();
+    document.getElementById("answer").textContent = JSON.stringify(j, null, 2);
+  }catch(e){
+    document.getElementById("answer").textContent = "Error: " + e;
+  }
+}
+</script>
+</body>
+</html>
